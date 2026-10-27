@@ -1,1 +1,35 @@
-LOADING_FROM_LOCAL
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#fbbf24"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="manifest" href="./manifest.json"/>
+<title>FOMO — pump.fun Terminal</title>
+</head>
+<body style="margin:0;background:#050505;color:#666;font-family:system-ui,monospace;display:flex;align-items:center;justify-content:center;min-height:100dvh">
+<div id="boot">Loading FOMO…</div>
+<script src="./fomo-part0.js"></script>
+<script src="./fomo-part1.js"></script>
+<script src="./fomo-part2.js"></script>
+<script>
+(function(){
+  try {
+    var parts = window.__FOMO_PARTS || [];
+    if (parts.length < 3 || !parts[0]) {
+      document.getElementById('boot').textContent = 'Load error — missing parts';
+      return;
+    }
+    var html = parts.join('');
+    document.open();
+    document.write(html);
+    document.close();
+  } catch (e) {
+    document.getElementById('boot').textContent = 'Error: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
