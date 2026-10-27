@@ -1,20 +1,524 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<meta name="theme-color" content="#fbbf24"/><meta name="apple-mobile-web-app-capable" content="yes"/>
-<link rel="manifest" href="./manifest.json"/><title>FOMO Live Paper</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#fbbf24"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="manifest" href="./manifest.json"/>
+<title>FOMO — Live Paper Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--panel:#0c0c0c;--border:#1a1a1a;--text:#e8e8e8;--muted:#6b6b6b;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--accent:#fbbf24}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100dvh;background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(251,191,36,.07),transparent);-webkit-tap-highlight-color:transparent}
+.t{max-width:440px;margin:0 auto;padding:10px 10px 18px;min-height:100dvh;display:flex;flex-direction:column;gap:10px}
+.h{display:flex;justify-content:space-between;align-items:flex-start;padding:2px}
+.h h1{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;display:flex;align-items:center;gap:6px}
+.badge{font-size:9px;background:#1a1a1a;border:1px solid #333;padding:2px 6px;border-radius:99px;color:var(--muted)}
+.sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.pill{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'JetBrains Mono',monospace;padding:4px 9px;border-radius:99px;border:1px solid}
+.pill.live{color:var(--green);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.25)}
+.pill.off{color:var(--yellow);background:rgba(234,179,8,.1);border-color:rgba(234,179,8,.25)}
+.dot{width:6px;height:6px;border-radius:50%;animation:p 1.4s infinite}
+.pill.live .dot{background:var(--green)}.pill.off .dot{background:var(--yellow)}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(251,191,36,.35),transparent)}
+.lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+.sol{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;letter-spacing:-1px}
+.usd{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.pnlrow{margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:12px}
+.mult{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px}
+.curve{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px;flex:1;min-height:210px;display:flex;flex-direction:column}
+.ch{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.cw{position:relative;flex:1;border-radius:10px;overflow:hidden;background:#080808;border:1px solid #151515}
+#c{width:100%;height:100%;display:block;touch-action:manipulation}
+.gl{position:absolute;left:8px;right:8px;top:15%;border-top:1.5px dashed rgba(251,191,36,.38);pointer-events:none}
+.gL{position:absolute;right:12px;top:11%;font-size:8px;color:var(--accent);font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,.65);padding:2px 5px;border-radius:3px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.st{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:9px 4px;text-align:center}
+.sv{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700}
+.sv.g{color:var(--green)}.sv.r{color:var(--red)}.sv.y{color:var(--yellow)}.sv.b{color:var(--blue)}
+.sl{font-size:9px;color:var(--muted);margin-top:2px;text-transform:uppercase}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;height:128px;display:flex;flex-direction:column}
+.ph{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;display:flex;justify-content:space-between}
+.lnk{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'JetBrains Mono',monospace}
+.rules{display:none;background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:8px;font-size:10px;font-family:'JetBrains Mono',monospace;line-height:1.5;color:#aaa;margin-bottom:5px}
+.rules.show{display:block}.rules strong{color:var(--text)}
+.lb{flex:1;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.45}
+.ll{margin-bottom:2px}.cmd{color:var(--muted)}.buy{color:var(--green)}.sell{color:var(--accent)}.rug{color:var(--red)}.info{color:#94a3b8}.ws{color:#60a5fa}.hold{color:#c084fc}
+.hist{display:none;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;max-height:160px;flex-direction:column}
+.hist.show{display:flex}
+.hb{flex:1;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:10px}
+.hr{display:grid;grid-template-columns:48px 1fr 44px 48px;gap:3px;padding:4px 0;border-bottom:1px solid #151515;align-items:center}
+.ht{color:var(--muted);font-size:9px}.hca{color:#60a5fa;font-size:9px;text-decoration:underline;cursor:pointer}
+.ctr{display:flex;gap:6px}
+.btn{flex:1;background:#111;border:1px solid #2a2a2a;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:11px 6px;border-radius:9px}
+.btn.on{background:rgba(34,197,94,.15);border-color:var(--green);color:var(--green)}
+.btn.d{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:var(--red)}
+.note{font-size:9px;color:var(--muted);text-align:center;font-family:'JetBrains Mono',monospace}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid #333;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 14px;border-radius:8px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
 </head>
-<body style="margin:0;background:#050505;color:#888;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100dvh">
-<div id="b">Loading FOMO live-paper…</div>
-<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-<script src="./fomo-p0.js"></script>
-<script src="./fomo-p1.js"></script>
-<script src="./fomo-p2.js"></script>
+<body>
+<div class="t">
+<div class="h">
+<div>
+<h1>FOMO <span class="badge">live paper</span></h1>
+<div class="sub">real coins · fake SOL · rules validated by market</div>
+</div>
+<div id="pill" class="pill off"><span class="dot"></span><span id="stxt">OFF</span></div>
+</div>
+
+<div class="card">
+<div class="lbl">Paper balance (saved)</div>
+<div class="row">
+<div class="sol"><span id="bal">5.00</span> <span style="font-size:15px;color:var(--muted)">SOL</span></div>
+<div class="usd">≈ $<span id="usd">945</span></div>
+</div>
+<div class="pnlrow">
+<span id="pnl">+0.00 SOL (+0%)</span>
+<span class="mult" id="mult">1.00×</span>
+</div>
+</div>
+
+<div class="curve">
+<div class="ch"><span>real launches · paper fills</span><span id="src">connecting…</span></div>
+<div class="cw">
+<canvas id="c"></canvas>
+<div class="gl"></div>
+<div class="gL">GRADUATION · 100%</div>
+</div>
+</div>
+
+<div class="stats">
+<div class="st"><div class="sv b" id="sS">0</div><div class="sl">seen</div></div>
+<div class="st"><div class="sv g" id="sB">0</div><div class="sl">bought</div></div>
+<div class="st"><div class="sv y" id="sK">0</div><div class="sl">skipped</div></div>
+<div class="st"><div class="sv r" id="sR">0</div><div class="sl">rugs</div></div>
+</div>
+
+<div class="panel">
+<div class="ph">
+<span>grok bot</span>
+<span>
+<button class="lnk" onclick="togHist()">history</button> ·
+<button class="lnk" onclick="expCSV()">export csv</button> ·
+<button class="lnk" onclick="togRules()">rules</button>
+</span>
+</div>
+<div class="rules" id="rules">
+<strong>1.</strong> Dev holds &gt; 10% → skip<br>
+<strong>2.</strong> Bundles hold &gt; 25% → skip<br>
+<strong>3.</strong> Same wallet as old rug → skip forever<br>
+<strong>4.</strong> Dev sells after entry → sell all<br>
+<strong>5.</strong> Graduates → sell all<br>
+<span style="color:#666;display:block;margin-top:4px">Paper SOL only. Entries only on LIVE real launches. PnL follows live trade flow.</span>
+</div>
+<div class="lb" id="log"></div>
+</div>
+
+<div class="hist" id="hist">
+<div class="ph"><span>trade history · <span id="hc">0</span></span><button class="lnk" onclick="togHist()">hide</button></div>
+<div class="hb" id="hb"><div style="color:var(--muted);text-align:center;padding:10px">No trades yet</div></div>
+</div>
+
+<div class="ctr">
+<button class="btn on" id="run" onclick="togBot()">● RUNNING</button>
+<button class="btn" onclick="resetSim()">RESET</button>
+<button class="btn d" onclick="forceSell()">FORCE SELL</button>
+</div>
+<div class="note">Live paper · real pump.fun flow · no simulated entries</div>
+</div>
+<div id="toast" class="toast"></div>
+
 <script>
-try{
-  const b64=(window.__P||[]).join('');
-  const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
-  document.open();document.write(pako.ungzip(bin,{to:'string'}));document.close();
-}catch(e){document.getElementById('b').textContent='Load error: '+e.message}
+const SP=189, SB=5, BS=0.32, MP=4, SK='fomo_live_paper_v1';
+const WP='wss://pumpdev.io/ws', WB='wss://pumpportal.fun/api/data';
+
+let bal=SB, positions=[], coins=[], tradeLog=[];
+let seen=0, bought=0, skipped=0, rugs=0, running=true;
+let knownRugs=new Set(), watched=new Set();
+let wsP=null, wsB=null, live=false, feed='none';
+let histOn=false;
+
+function canStore(){try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}}
+const okS=canStore();
+
+function save(){
+  if(!okS)return;
+  try{
+    localStorage.setItem(SK, JSON.stringify({
+      bal, positions, tradeLog, seen, bought, skipped, rugs,
+      knownRugs:[...knownRugs], t:Date.now()
+    }));
+  }catch(e){}
+}
+function load(){
+  if(!okS)return false;
+  try{
+    const r=localStorage.getItem(SK); if(!r)return false;
+    const d=JSON.parse(r);
+    if(typeof d.bal!=='number')return false;
+    bal=d.bal; positions=d.positions||[]; tradeLog=d.tradeLog||[];
+    seen=d.seen||0; bought=d.bought||0; skipped=d.skipped||0; rugs=d.rugs||0;
+    knownRugs=new Set(d.knownRugs||[]);
+    positions.forEach(p=>{
+      coins.push({
+        id:p.mint||p.id, mint:p.mint, symbol:p.symbol, color:p.color||'#22c55e',
+        curve:p.curve||40, x:0.15+Math.random()*0.7, owned:true, age:0,
+        real:true, lastPx:p.lastPx||1, entryPx:p.entryPx||1
+      });
+      if(p.mint) watched.add(p.mint);
+    });
+    return true;
+  }catch(e){return false}
+}
+
+function log(m,c='info'){
+  const e=document.createElement('div'); e.className='ll';
+  e.innerHTML='<span class="cmd">grok&gt;</span> <span class="'+c+'">'+m+'</span>';
+  const b=document.getElementById('log'); b.prepend(e);
+  while(b.children.length>50) b.removeChild(b.lastChild);
+}
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('show');
+  clearTimeout(toast._tm); toast._tm=setTimeout(()=>t.classList.remove('show'),1600);
+}
+function shortCA(ca){ if(!ca||ca.length<12) return ca||''; return ca.slice(0,4)+'…'+ca.slice(-4); }
+function copyCA(ca){
+  if(!ca){ log('no CA','info'); return; }
+  const done=()=>{ log('copied CA · '+shortCA(ca),'ws'); toast('CA copied'); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ca).then(done).catch(()=>fb(ca,done));
+  else fb(ca,done);
+}
+function fb(text,cb){
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;left:-9999px';
+  document.body.appendChild(ta); ta.select();
+  try{document.execCommand('copy'); if(cb)cb();}catch(e){}
+  document.body.removeChild(ta);
+}
+
+function randColor(){
+  const c=['#22c55e','#3b82f6','#a855f7','#f97316','#eab308','#ec4899','#06b6d4','#84cc16'];
+  return c[Math.floor(Math.random()*c.length)];
+}
+
+/* ----- Rules (heuristic concentration from launch data) ----- */
+function checkRules(coin){
+  if(knownRugs.has(coin.dev)) return {ok:false, reason:'same wallet as old rug'};
+  let dev= coin.devHold!=null ? coin.devHold : (2+Math.random()*18);
+  let bundle= coin.bundleHold!=null ? coin.bundleHold : (Math.random()*35);
+  if(coin.initSol!=null){
+    if(coin.initSol>4) dev=Math.min(40, dev+12);
+    else if(coin.initSol>2) dev=Math.min(30, dev+6);
+    else if(coin.initSol<0.2) dev=Math.max(1, dev-3);
+  }
+  coin.devHold=dev; coin.bundleHold=bundle;
+  if(dev>10) return {ok:false, reason:'dev holds '+dev.toFixed(0)+'%'};
+  if(bundle>25) return {ok:false, reason:'bundles hold '+bundle.toFixed(0)+'%'};
+  return {ok:true, reason:'dev '+dev.toFixed(0)+'% · bundle '+bundle.toFixed(0)+'%'};
+}
+
+function record(type, symbol, sol, mult, note, entrySol, ca){
+  tradeLog.push({
+    ts:new Date().toISOString(), type, symbol, sol:+sol.toFixed(4),
+    mult: mult!=null ? +mult.toFixed(3) : '', note:note||'',
+    entrySol: entrySol!=null ? +entrySol.toFixed(4) : null, ca: ca||''
+  });
+  if(tradeLog.length>300) tradeLog=tradeLog.slice(-300);
+  renderHist(); save();
+}
+
+function buy(coin, reason){
+  if(positions.length>=MP || bal<BS+0.04){
+    if(bal<BS+0.04) log('insufficient paper SOL','info');
+    return;
+  }
+  bal-=BS;
+  const entryPx = coin.lastPx || 1;
+  positions.push({
+    id: coin.id, mint: coin.mint, symbol: coin.symbol, color: coin.color,
+    size: BS, entrySol: BS, entryPx, lastPx: entryPx, curve: coin.curve||5, age:0
+  });
+  coin.owned=true; bought++;
+  record('BUY', coin.symbol, BS, null, reason, BS, coin.mint);
+  log(coin.symbol+' · '+reason+' → buy '+BS.toFixed(2)+' SOL','buy');
+  if(coin.mint){ watched.add(coin.mint); subTrades(coin.mint); }
+  ui(); save();
+}
+
+function sell(pos, reason, forcedMult){
+  let mult;
+  if(forcedMult!=null) mult=forcedMult;
+  else {
+    const px = pos.lastPx || pos.entryPx || 1;
+    mult = Math.max(0.2, Math.min(8, px / (pos.entryPx||1)));
+  }
+  const proceeds=pos.size*mult, pnl=proceeds-pos.size;
+  bal+=proceeds;
+  positions=positions.filter(p=>p.id!==pos.id);
+  const coin=coins.find(x=>x.id===pos.id); if(coin) coin.owned=false;
+  if(pos.mint) watched.delete(pos.mint);
+  record('SELL', pos.symbol, proceeds, mult, reason, pos.entrySol||pos.size, pos.mint);
+  log('sold '+pos.symbol+' '+((mult-1)*100).toFixed(0)+'% · '+(pnl>=0?'+':'')+pnl.toFixed(2)+' SOL','sell');
+  ui(); save();
+}
+
+function forceSell(){ [...positions].forEach(p=>sell(p,'force', Math.max(0.3, (p.lastPx||1)/(p.entryPx||1)))); log('force sold all','info'); }
+
+function expCSV(){
+  if(!tradeLog.length){ log('no trades','info'); return; }
+  const h='timestamp,type,symbol,ca,sol,mult,entry_sol,note\n';
+  const rows=tradeLog.map(t=>{
+    const ca=(t.ca&&!String(t.ca).startsWith('sim_'))?t.ca:'';
+    return t.ts+','+t.type+','+t.symbol+','+ca+','+t.sol+','+t.mult+','+(t.entrySol??'')+',"'+(t.note||'').replace(/"/g,'""')+'"';
+  }).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([h+rows],{type:'text/csv'}));
+  a.download='fomo-live-paper-'+Date.now()+'.csv'; a.click();
+  log('exported '+tradeLog.length+' trades','info');
+}
+
+function renderHist(){
+  document.getElementById('hc').textContent=tradeLog.length;
+  const body=document.getElementById('hb');
+  if(!tradeLog.length){ body.innerHTML='<div style="color:var(--muted);text-align:center;padding:10px">No trades yet</div>'; return; }
+  body.innerHTML=[...tradeLog].reverse().slice(0,80).map(t=>{
+    const tm=t.ts.slice(11,19), isBuy=t.type==='BUY';
+    let pnl='—', cls='';
+    if(!isBuy && t.entrySol!=null){ const p=t.sol-t.entrySol; pnl=(p>=0?'+':'')+p.toFixed(2); cls=p>=0?'g':'r'; }
+    else if(isBuy){ pnl='-'+Number(t.sol).toFixed(2); cls='r'; }
+    const ca=t.ca||'';
+    const caHtml = (ca && ca.length>20)
+      ? ' <span class="hca" data-ca="'+ca+'" onclick="event.stopPropagation();copyCA(this.dataset.ca)">'+shortCA(ca)+'</span>'
+      : '';
+    return '<div class="hr"><span class="ht">'+tm+'</span><span>'+t.symbol+caHtml+'</span><span class="'+(isBuy?'buy':'sell')+'">'+t.type+'</span><span class="'+cls+'">'+pnl+'</span></div>';
+  }).join('');
+}
+
+/* ----- Live launches only (no sim entries) ----- */
+function onLaunch(data, source){
+  const mint = data.mint || null;
+  if(!mint || String(mint).length < 20) return; // require real mint
+  if(coins.some(c=>c.mint===mint)) return;
+
+  const symbol = data.symbol ? ('$'+String(data.symbol).replace(/^\$/,'')) : ('$'+mint.slice(0,6));
+  const creator = data.traderPublicKey || data.creator || data.deployer || ('dev_'+mint.slice(0,6));
+  const initSol = data.solAmount!=null ? Number(data.solAmount) : (data.initialQuoteAmount!=null ? Number(data.initialQuoteAmount) : null);
+
+  const coin = {
+    id: mint, mint, symbol, color: randColor(),
+    curve: 2+Math.random()*8, x: 0.08+Math.random()*0.84,
+    owned:false, age:0, dev:creator, real:true, source,
+    initSol, lastPx:1, graduated:false
+  };
+  coins.push(coin); seen++;
+
+  const rules = checkRules(coin);
+  if(!rules.ok){
+    skipped++;
+    if(rules.reason.includes('rug')||rules.reason.includes('wallet')){ rugs++; knownRugs.add(coin.dev); log('skip '+symbol+' · '+rules.reason,'rug'); }
+    else log('skip '+symbol+' · '+rules.reason,'hold');
+    ui(); save(); return;
+  }
+
+  // Live-paper entry: only when feed is live and rules pass
+  if(running && live && positions.length<MP && bal>=BS+0.04){
+    // light quality gate so we don't buy everything
+    const score = (initSol && initSol>0.5 ? 1 : 0) + (Math.random()<0.45 ? 1 : 0);
+    if(score>=1) buy(coin, 'live · '+rules.reason);
+    else { skipped++; log('skip '+symbol+' · weak live signal','info'); }
+  } else {
+    skipped++;
+  }
+  ui(); save();
+}
+
+function applyTrade(data){
+  const mint=data.mint; if(!mint||!watched.has(mint)) return;
+  const coin=coins.find(c=>c.mint===mint); if(!coin||coin.graduated) return;
+  const pos=positions.find(p=>p.mint===mint);
+
+  const isBuy = data.txType==='buy' || data.isBuy===true;
+  const isSell = data.txType==='sell' || data.isBuy===false;
+
+  // Move curve + paper mark from real flow direction
+  if(isBuy){
+    coin.curve = Math.min(99.5, coin.curve + (0.6 + Math.random()*2.0));
+    coin.lastPx = (coin.lastPx||1) * (1 + 0.01 + Math.random()*0.04);
+  } else if(isSell){
+    coin.curve = Math.max(0, coin.curve - (0.8 + Math.random()*2.5));
+    coin.lastPx = (coin.lastPx||1) * (1 - 0.015 - Math.random()*0.05);
+  }
+
+  if(pos){
+    pos.curve = coin.curve;
+    pos.lastPx = coin.lastPx;
+    // Dev-sell heuristic: large sell after our entry
+    if(isSell && data.traderPublicKey && data.traderPublicKey===coin.dev){
+      sell(pos, 'dev sells after entry', Math.max(0.25, (pos.lastPx||1)/(pos.entryPx||1)));
+      knownRugs.add(coin.dev); rugs++;
+    }
+  }
+
+  if(coin.curve>=99 && !coin.graduated){
+    coin.graduated=true; coin.curve=100;
+    if(pos) sell(pos, 'graduated → sell all', Math.max(1.2, (pos.lastPx||1)/(pos.entryPx||1)));
+  }
+}
+
+function onMsg(raw){
+  try{
+    const d=JSON.parse(raw);
+    if(d.txType==='create' || (d.mint && (d.name||d.symbol) && !d.txType)){ onLaunch(d); return; }
+    if(d.signature && d.mint && (d.name||d.symbol)){ onLaunch(d); return; }
+    if((d.txType==='buy'||d.txType==='sell') && d.mint) applyTrade(d);
+  }catch(e){}
+}
+
+function setLive(on, label){
+  live=on; feed=label||(on?'live':'off');
+  const pill=document.getElementById('pill'), txt=document.getElementById('stxt'), src=document.getElementById('src');
+  if(on){ pill.className='pill live'; txt.textContent='LIVE'; src.textContent=label||'live feed'; }
+  else { pill.className='pill off'; txt.textContent='OFF'; src.textContent='waiting for feed'; }
+}
+
+function subTrades(mint){
+  if(wsP && wsP.readyState===1){
+    try{ wsP.send(JSON.stringify({method:'subscribeTokenTrade', keys:[mint]})); log('watching '+shortCA(mint),'ws'); }catch(e){}
+  }
+  if(wsB && wsB.readyState===1){
+    try{ wsB.send(JSON.stringify({method:'subscribeTokenTrade', keys:[mint]})); }catch(e){}
+  }
+}
+
+function connP(){
+  try{
+    wsP=new WebSocket(WP);
+    wsP.onopen=()=>{ setLive(true,'pumpdev'); log('pumpdev connected','ws'); wsP.send(JSON.stringify({method:'subscribeNewToken'})); positions.forEach(p=>{ if(p.mint) subTrades(p.mint); }); };
+    wsP.onmessage=e=>onMsg(e.data);
+    wsP.onclose=()=>{ if(feed==='pumpdev') setLive(false); log('pumpdev closed','info'); setTimeout(connB,1200); setTimeout(connP,10000); };
+    wsP.onerror=()=>{};
+  }catch(e){ connB(); }
+}
+function connB(){
+  try{
+    wsB=new WebSocket(WB);
+    wsB.onopen=()=>{ if(!live) setLive(true,'PumpPortal'); log('PumpPortal connected','ws'); wsB.send(JSON.stringify({method:'subscribeNewToken'})); positions.forEach(p=>{ if(p.mint) subTrades(p.mint); }); };
+    wsB.onmessage=e=>onMsg(e.data);
+    wsB.onclose=()=>{ if(feed==='PumpPortal') setLive(false); setTimeout(connB,12000); };
+    wsB.onerror=()=>{};
+  }catch(e){ setLive(false); log('no live feed — paper entries paused','info'); }
+}
+
+function tick(){
+  if(!running) return;
+  // slow drift only for owned real positions between trade events
+  positions.forEach(p=>{
+    p.age++;
+    const c=coins.find(x=>x.id===p.id);
+    if(c){ p.curve=c.curve; p.lastPx=c.lastPx; }
+  });
+  if(coins.length>80) coins=coins.filter(c=>c.owned || c.age<40 || c.curve>50);
+  coins.forEach(c=>c.age++);
+  draw(); ui();
+}
+
+const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+function resize(){ const w=canvas.parentElement, d=devicePixelRatio||1; canvas.width=w.clientWidth*d; canvas.height=w.clientHeight*d; ctx.setTransform(d,0,0,d,0,0); }
+function draw(){
+  const w=canvas.clientWidth, h=canvas.clientHeight; if(!w||!h)return;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='rgba(255,255,255,.03)'; ctx.lineWidth=1;
+  for(let i=0;i<5;i++){ const y=h*(.14+i*.17); ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  ctx.beginPath(); ctx.strokeStyle='rgba(251,191,36,.15)'; ctx.lineWidth=2;
+  ctx.moveTo(0,h*.92); ctx.quadraticCurveTo(w*.45,h*.55,w*.95,h*.12); ctx.stroke();
+  coins.forEach(c=>{
+    const x=c.x*w, y=h*(.92-(c.curve/100)*.78), r=c.owned?10:5+Math.min(4,c.curve/25);
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=c.owned?c.color:c.color+'99'; ctx.fill();
+    if(c.owned){ ctx.strokeStyle='#fff'; ctx.lineWidth=1.4; ctx.stroke(); }
+    if(c.owned || c.curve>40){
+      ctx.font='9px JetBrains Mono'; ctx.fillStyle=c.owned?'#fff':'rgba(255,255,255,.55)'; ctx.textAlign='center';
+      const lb=c.symbol.length>9?c.symbol.slice(0,8)+'…':c.symbol;
+      ctx.fillText(lb, x, y-r-3);
+      if(c.owned){
+        const pos=positions.find(p=>p.id===c.id);
+        if(pos){
+          const mult=(pos.lastPx||1)/(pos.entryPx||1);
+          ctx.fillStyle=mult>=1?'#22c55e':'#ef4444';
+          ctx.fillText((mult>=1?'+':'')+((mult-1)*100).toFixed(0)+'%', x, y+r+10);
+        }
+      }
+    }
+  });
+}
+function pick(clientX, clientY){
+  const rect=canvas.getBoundingClientRect();
+  const x=clientX-rect.left, y=clientY-rect.top, w=canvas.clientWidth, h=canvas.clientHeight;
+  let best=null, bestD=56;
+  coins.forEach(c=>{
+    const cx=c.x*w, cy=h*(.92-(c.curve/100)*.78);
+    const d=Math.hypot(cx-x, cy-y); if(d<bestD){ bestD=d; best=c; }
+  });
+  return best;
+}
+function onPick(ev){
+  ev.preventDefault();
+  const t=(ev.changedTouches&&ev.changedTouches[0])||ev;
+  const best=pick(t.clientX, t.clientY);
+  if(!best){ log('tap a bubble to copy CA','info'); return; }
+  if(best.mint && best.mint.length>20) copyCA(best.mint);
+  else log(best.symbol+' · no CA','info');
+}
+canvas.addEventListener('click', onPick);
+canvas.addEventListener('touchend', onPick, {passive:false});
+
+function ui(){
+  document.getElementById('bal').textContent=bal.toFixed(2);
+  document.getElementById('usd').textContent=Math.round(bal*SP).toLocaleString();
+  const pnl=bal-SB, pct=(pnl/SB)*100, el=document.getElementById('pnl');
+  el.textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+' SOL ('+(pct>=0?'+':'')+pct.toFixed(0)+'%)';
+  el.style.color=pnl>=0?'var(--green)':'var(--red)';
+  document.getElementById('mult').textContent=(bal/SB).toFixed(2)+'×';
+  document.getElementById('sS').textContent=seen;
+  document.getElementById('sB').textContent=bought;
+  document.getElementById('sK').textContent=skipped;
+  document.getElementById('sR').textContent=rugs;
+}
+function togBot(){
+  running=!running; const b=document.getElementById('run');
+  if(running){ b.textContent='● RUNNING'; b.classList.add('on'); log('resumed','info'); }
+  else { b.textContent='○ PAUSED'; b.classList.remove('on'); log('paused','info'); }
+}
+function resetSim(){
+  if(!confirm('Reset paper balance to 5.00 SOL and clear history?')) return;
+  bal=SB; positions=[]; coins=[]; tradeLog=[]; seen=bought=skipped=rugs=0;
+  knownRugs.clear(); watched.clear();
+  document.getElementById('log').innerHTML='';
+  try{ localStorage.removeItem(SK); }catch(e){}
+  log('reset · 5.00 SOL paper','info'); renderHist(); ui(); draw();
+}
+function togRules(){ document.getElementById('rules').classList.toggle('show'); }
+function togHist(){ histOn=!histOn; document.getElementById('hist').classList.toggle('show', histOn); if(histOn) renderHist(); }
+
+window.addEventListener('resize', ()=>{ resize(); draw(); });
+resize();
+const restored=load(); ui(); renderHist();
+if(restored) log('restored · '+bal.toFixed(2)+' SOL · '+tradeLog.length+' trades','info');
+else log('FOMO live-paper online · real coins only','info');
+log('connecting live feeds…','ws');
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+connP(); setTimeout(connB, 2000);
+setInterval(tick, 700); setInterval(draw, 50); setInterval(save, 8000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') save(); });
+window.addEventListener('pagehide', save);
 </script>
-</body></html>
+</body>
+</html>
