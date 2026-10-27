@@ -1,66 +1,462 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/><meta name="theme-color" content="#fbbf24"/>
-<link rel="manifest" href="./manifest.json"/>
-<title>FOMO Terminal</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#050505;color:#e8e8e8;font-family:system-ui,sans-serif;min-height:100dvh;padding:12px}
-.w{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
-h1{font-size:20px;font-family:monospace} .b{font-size:10px;color:#6b6b6b;border:1px solid #333;padding:2px 6px;border-radius:99px;margin-left:6px}
-.card{background:#0c0c0c;border:1px solid #1a1a1a;border-radius:12px;padding:14px}
-.lbl{font-size:10px;color:#6b6b6b;text-transform:uppercase}
-.sol{font-size:28px;font-family:monospace;font-weight:700}
-.pnl{font-size:12px;font-family:monospace;margin-top:6px;color:#22c55e}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.st{background:#0c0c0c;border:1px solid #1a1a1a;border-radius:10px;padding:8px;text-align:center}
-.sv{font-family:monospace;font-size:16px;font-weight:700}.sl{font-size:9px;color:#6b6b6b}
-.log{background:#0c0c0c;border:1px solid #1a1a1a;border-radius:12px;padding:10px;height:140px;overflow-y:auto;font-family:monospace;font-size:10px;line-height:1.5}
-.hist{background:#0c0c0c;border:1px solid #1a1a1a;border-radius:12px;padding:10px;max-height:140px;overflow-y:auto;font-family:monospace;font-size:10px;display:none}
-.hist.on{display:block}
-.btn{flex:1;background:#111;border:1px solid #2a2a2a;color:#e8e8e8;font-family:monospace;font-size:11px;padding:12px;border-radius:9px}
-.row{display:flex;gap:6px}
-.g{color:#22c55e}.r{color:#ef4444}.y{color:#eab308}.a{color:#fbbf24}.m{color:#6b6b6b}
-</style></head><body><div class="w">
-<div><h1>FOMO <span class="b">paper · v3</span></h1><div class="m" style="font-size:10px;font-family:monospace">persistent paper trading</div></div>
-<div class="card"><div class="lbl">Balance (saved on device)</div><div class="sol"><span id="bal">5.00</span> SOL</div><div class="pnl" id="pnl">+0.00 SOL</div></div>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#fbbf24" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="description" content="FOMO paper-trading terminal for pump.fun" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23050505' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='62' font-size='40' text-anchor='middle' fill='%23fbbf24' font-family='monospace' font-weight='700'%3EFO%3C/text%3E%3C/svg%3E" />
+<title>FOMO — pump.fun Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--bg:#050505;--panel:#0c0c0c;--border:#1a1a1a;--text:#e8e8e8;--muted:#6b6b6b;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--accent:#fbbf24;}*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;min-height:100dvh;background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(251,191,36,.07),transparent),radial-gradient(ellipse 60% 40% at 90% 100%,rgba(59,130,246,.04),transparent);-webkit-tap-highlight-color:transparent;}.terminal{max-width:440px;margin:0 auto;padding:10px 10px 18px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;gap:10px}.header{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 2px}.brand h1{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:700;letter-spacing:-.5px;display:flex;align-items:center;gap:7px}.brand h1 .badge{font-size:9px;background:#1a1a1a;border:1px solid #333;padding:2px 6px;border-radius:99px;color:var(--muted);font-weight:500}.brand .sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}.status-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'JetBrains Mono',monospace;padding:4px 9px;border-radius:99px;border:1px solid}.status-pill.live{color:var(--green);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.25)}.status-pill.sim{color:var(--yellow);background:rgba(234,179,8,.1);border-color:rgba(234,179,8,.25)}.status-pill .dot{width:6px;height:6px;border-radius:50%;animation:pulse 1.4s infinite}.status-pill.live .dot{background:var(--green)}.status-pill.sim .dot{background:var(--yellow)}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}.balance-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 14px 11px;position:relative;overflow:hidden}.balance-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(251,191,36,.35),transparent)}.bal-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px}.bal-row{display:flex;justify-content:space-between;align-items:baseline}.bal-sol{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;letter-spacing:-1.2px;line-height:1}.bal-usd{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}.bal-pnl{margin-top:8px;display:flex;justify-content:space-between;align-items:center}.pnl-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green)}.multiplier{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px;font-family:'JetBrains Mono',monospace}.curve-panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;min-height:220px;position:relative}.curve-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.curve-title{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}.curve-canvas-wrap{position:relative;flex:1;border-radius:10px;overflow:hidden;background:#080808;border:1px solid #151515}#curveCanvas{width:100%;height:100%;display:block}.grad-line{position:absolute;left:8px;right:8px;top:15%;border-top:1.5px dashed rgba(251,191,36,.38);pointer-events:none}.grad-label{position:absolute;right:12px;top:11%;font-size:8px;color:var(--accent);font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,.65);padding:2px 5px;border-radius:3px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:9px 4px;text-align:center}.stat-val{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;line-height:1.1}.stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}.stat-val.yellow{color:var(--yellow)}.stat-val.blue{color:var(--blue)}.stat-label{font-size:9px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.3px}.log-panel,.hist-panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column}.log-panel{height:130px}.hist-panel{max-height:160px;display:none}.hist-panel.show{display:flex}.panel-header{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}.rules-toggle,.export-btn,.hist-toggle{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;background:none;border:none;font-family:'JetBrains Mono',monospace;padding:0}.rules-box{display:none;background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:9px;font-size:10px;font-family:'JetBrains Mono',monospace;line-height:1.5;color:#aaa;margin-bottom:5px}.rules-box.show{display:block}.rules-box strong{color:var(--text)}.log-body,.hist-body{flex:1;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.45;scrollbar-width:thin;scrollbar-color:#333 transparent}.log-line{margin-bottom:2px;opacity:0;animation:fadeIn .2s forwards}@keyframes fadeIn{to{opacity:1}}.log-line .cmd{color:var(--muted)}.log-line .buy{color:var(--green)}.log-line .sell{color:var(--accent)}.log-line .skip{color:var(--yellow)}.log-line .rug{color:var(--red)}.log-line .info{color:#94a3b8}.log-line .ws{color:#60a5fa}.log-line .hold{color:#c084fc}.hist-row{display:grid;grid-template-columns:48px 1fr 44px 44px;gap:3px;padding:4px 0;border-bottom:1px solid #151515;align-items:center}.hist-row:last-child{border-bottom:none}.hist-time{color:var(--muted);font-size:9px}.hist-sym{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.hist-ca{color:#60a5fa;font-size:9px;cursor:pointer;text-decoration:underline;text-underline-offset:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hist-ca:active{color:var(--accent)}.hist-type.buy{color:var(--green)}.hist-type.sell{color:var(--accent)}.hist-pnl.pos{color:var(--green)}.hist-pnl.neg{color:var(--red)}.hist-empty{color:var(--muted);text-align:center;padding:12px 0}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid #333;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 14px;border-radius:8px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none}.toast.show{opacity:1}.controls{display:flex;gap:6px}button.ctrl{flex:1;background:#111;border:1px solid #2a2a2a;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:11px 6px;border-radius:9px;cursor:pointer;transition:all .15s}button.ctrl:hover{background:#1a1a1a;border-color:#444}button.ctrl.active{background:rgba(34,197,94,.15);border-color:var(--green);color:var(--green)}button.ctrl.danger{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:var(--red)}.note{font-size:9px;color:var(--muted);text-align:center;font-family:'JetBrains Mono',monospace;padding:1px 0 4px}@media(max-width:380px){.bal-sol{font-size:28px}.stat-val{font-size:15px}}</style>
+</head>
+<body>
+<div class="terminal">
+<div class="header">
+<div class="brand">
+<h1>FOMO <span class="badge">paper · v3</span></h1>
+<div class="sub">pump.fun · persistent paper + history</div>
+</div>
+<div id="statusPill" class="status-pill sim"><span class="dot"></span><span id="statusText">SIM</span></div>
+</div>
+<div class="balance-card">
+<div class="bal-label">Balance (paper · saved)</div>
+<div class="bal-row">
+<div class="bal-sol"><span id="balSol">5.00</span> <span style="font-size:16px;color:var(--muted)">SOL</span></div>
+<div class="bal-usd">≈ $<span id="balUsd">945</span></div>
+</div>
+<div class="bal-pnl">
+<div class="pnl-text" id="pnlText">+0.00 SOL (+0%)</div>
+<div class="multiplier" id="mult">1.00×</div>
+</div>
+</div>
+<div class="curve-panel">
+<div class="curve-header">
+<div class="curve-title">bonding curve · live</div>
+<div class="curve-title" id="feedSource">connecting…</div>
+</div>
+<div class="curve-canvas-wrap">
+<canvas id="curveCanvas"></canvas>
+<div class="grad-line"></div>
+<div class="grad-label">GRADUATION · 100% → PumpSwap</div>
+</div>
+</div>
 <div class="stats">
-<div class="st"><div class="sv" style="color:#3b82f6" id="sS">0</div><div class="sl">seen</div></div>
-<div class="st"><div class="sv g" id="sB">0</div><div class="sl">bought</div></div>
-<div class="st"><div class="sv y" id="sK">0</div><div class="sl">skipped</div></div>
-<div class="st"><div class="sv r" id="sR">0</div><div class="sl">rugs</div></div>
+<div class="stat"><div class="stat-val blue" id="statSeen">0</div><div class="stat-label">seen</div></div>
+<div class="stat"><div class="stat-val green" id="statBought">0</div><div class="stat-label">bought</div></div>
+<div class="stat"><div class="stat-val yellow" id="statSkipped">0</div><div class="stat-label">skipped</div></div>
+<div class="stat"><div class="stat-val red" id="statRugs">0</div><div class="stat-label">rugs</div></div>
 </div>
-<div class="log" id="log"></div>
-<div class="hist" id="hist"></div>
-<div class="row">
-<button class="btn" id="run" onclick="tog()">● RUN</button>
-<button class="btn" onclick="showH()">HISTORY</button>
-<button class="btn" onclick="exp()">CSV</button>
-<button class="btn" onclick="rst()">RESET</button>
+<div class="log-panel">
+<div class="panel-header">
+<span>grok bot · thinking</span>
+<span>
+<button class="hist-toggle" onclick="toggleHistory()">history</button>
+&nbsp;·&nbsp;
+<button class="export-btn" onclick="exportCSV()">export csv</button>
+&nbsp;·&nbsp;
+<span class="rules-toggle" onclick="toggleRules()">rules</span>
+</span>
 </div>
-<div class="m" style="text-align:center;font-size:9px;font-family:monospace">Rules: dev>10% skip · bundle>25% skip · rug wallet skip · dev sell exit · graduate sell</div>
+<div class="rules-box" id="rulesBox">
+<strong>1.</strong> Dev holds &gt; 10% → skip<br>
+<strong>2.</strong> Bundles hold &gt; 25% → skip<br>
+<strong>3.</strong> Same wallet as a previous rug → skip forever<br>
+<strong>4.</strong> Dev sells after entry → sell all of that coin<br>
+<strong>5.</strong> Coin graduates → sell all<br>
+<span style="color:#666;display:block;margin-top:4px">Paper only. Balance &amp; history saved on this device.</span>
+</div>
+<div class="log-body" id="logBody"></div>
+</div>
+<div class="hist-panel" id="histPanel">
+<div class="panel-header">
+<span>trade history · <span id="histCount">0</span></span>
+<button class="hist-toggle" onclick="toggleHistory()">hide</button>
+</div>
+<div class="hist-body" id="histBody"><div class="hist-empty">No trades yet</div></div>
+</div>
+<div class="controls">
+<button class="ctrl active" id="btnStart" onclick="toggleBot()">● RUNNING</button>
+<button class="ctrl" onclick="resetSim()">RESET</button>
+<button class="ctrl danger" onclick="forceSellAll()">FORCE SELL</button>
+</div>
+<div class="note">pumpdev + PumpPortal · paper PnL persists on this device</div>
 </div>
 <script>
-const SK='fomo_terminal_v3',SB=5,BS=0.32;
-let bal=SB,pos=[],logT=[],seen=0,bought=0,skipped=0,rugs=0,run=true,rugsW=new Set();
-function ok(){try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}}
-const can=ok();
-function save(){if(!can)return;try{localStorage.setItem(SK,JSON.stringify({bal,pos,logT,seen,bought,skipped,rugs,rugsW:[...rugsW],t:Date.now()}))}catch(e){}}
-function load(){if(!can)return false;try{const r=localStorage.getItem(SK);if(!r)return false;const d=JSON.parse(r);if(typeof d.bal!=='number')return false;bal=d.bal;pos=d.pos||[];logT=d.logT||[];seen=d.seen||0;bought=d.bought||0;skipped=d.skipped||0;rugs=d.rugs||0;rugsW=new Set(d.rugsW||[]);return true}catch(e){return false}}
-function log(m,c){const e=document.createElement('div');e.innerHTML='<span class="m">grok></span> <span class="'+c+'">'+m+'</span>';document.getElementById('log').prepend(e)}
-function ui(){document.getElementById('bal').textContent=bal.toFixed(2);const p=bal-SB;document.getElementById('pnl').textContent=(p>=0?'+':'')+p.toFixed(2)+' SOL';document.getElementById('pnl').style.color=p>=0?'#22c55e':'#ef4444';document.getElementById('sS').textContent=seen;document.getElementById('sB').textContent=bought;document.getElementById('sK').textContent=skipped;document.getElementById('sR').textContent=rugs}
-function rec(type,sym,sol,note,ca){logT.push({ts:new Date().toISOString(),type,sym,sol,note,ca:ca||''});if(logT.length>200)logT=logT.slice(-200);save()}
-function tick(){if(!run)return;seen++;const dev=2+Math.random()*22,bundle=Math.random()*40,sym='$MEME'+(0|Math.random()*999);if(dev>10){skipped++;if(Math.random()<.3){rugs++;log('skip '+sym+' · dev holds '+dev.toFixed(0)+'%','r')}return}if(bundle>25){skipped++;log('skip '+sym+' · bundles '+bundle.toFixed(0)+'%','y');return}if(Math.random()<.25&&pos.length<4&&bal>=BS+.05){bal-=BS;pos.push({sym,size:BS,entry:BS});bought++;rec('BUY',sym,BS,'entry','');log(sym+' → buy '+BS.toFixed(2)+' SOL','g');ui();save()}if(pos.length&&Math.random()<.15){const p=pos.pop();const m=.5+Math.random()*2.5;const got=p.size*m;bal+=got;rec('SELL',p.sym,got,'exit','');log('sold '+p.sym+' '+((m-1)*100).toFixed(0)+'%','a');ui();save()}}
-function tog(){run=!run;document.getElementById('run').textContent=run?'● RUN':'○ PAUSE';log(run?'resumed':'paused','m')}
-function showH(){const h=document.getElementById('hist');h.classList.toggle('on');h.innerHTML=logT.slice().reverse().slice(0,40).map(t=>'<div>'+t.ts.slice(11,19)+' '+t.type+' '+t.sym+' '+t.sol+(t.ca?' <span style="color:#60a5fa;text-decoration:underline" onclick="navigator.clipboard.writeText(\''+t.ca+'\')">'+t.ca.slice(0,4)+'…</span>':'')+'</div>').join('')||'<div class="m">No trades</div>'}
-function exp(){if(!logT.length){log('no trades','m');return}const csv='time,type,sym,ca,sol\n'+logT.map(t=>t.ts+','+t.type+','+t.sym+','+(t.ca||'')+','+t.sol).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='fomo.csv';a.click()}
-function rst(){if(!confirm('Reset paper to 5 SOL?'))return;bal=SB;pos=[];logT=[];seen=bought=skipped=rugs=0;rugsW.clear();try{localStorage.removeItem(SK)}catch(e){}ui();log('reset 5.00 SOL','m')}
-const rest=load();ui();
-if(rest)log('restored '+bal.toFixed(2)+' SOL · '+logT.length+' trades','g');
-else log('FOMO v3 · paper persists on device','m');
-if(!can)log('storage blocked — will reset on reload','r');
-setInterval(tick,1200);setInterval(save,5000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
-window.addEventListener('pagehide',save);
-</script></body></html>
+const SOL_PRICE=189, START_BAL=5.0, BUY_SIZE=0.32, MAX_POSITIONS=4, TICK_MS=800;
+const WS_PRIMARY='wss://pumpdev.io/ws', WS_BACKUP='wss://pumpportal.fun/api/data';
+const STORAGE_KEY='fomo_terminal_v3';
+let bal=START_BAL, positions=[], coins=[], tradeLog=[];
+let seen=0,bought=0,skipped=0,rugs=0, running=true;
+let knownRugs=new Set(), watchedMints=new Set();
+let wsPrimary=null, wsBackup=null, feedLive=false, lastRealLaunch=0, activeFeed='none';
+let historyVisible=false;
+const prefixes=['GROK','PEPE','DOGE','MOON','FROG','AI','SEND','WAG','LAMBO','CHAD','BASED','RUG','FAKE','TURBO','HYPER','NEON','SOL','PUMP','FOMO','ALPHA','SIGMA','GIGA','MEGA','BONK','WIF'];
+const suffixes=['COIN','FUN','AI','X','INU','CAT','DOG','MOON','ROCKET','KING','BOT','MAX','PRO','V2','Z','69','420','SOL','PUMP'];
+function randName(){return '$'+prefixes[Math.floor(Math.random()*prefixes.length)]+suffixes[Math.floor(Math.random()*suffixes.length)]}
+function randColor(){const c=['#22c55e','#3b82f6','#a855f7','#f97316','#eab308','#ec4899','#06b6d4','#84cc16'];return c[Math.floor(Math.random()*c.length)]}
+// ---------- Persistence ----------
+function storageAvailable(){
+try{
+const k='__fomo_test__';
+localStorage.setItem(k,'1');
+localStorage.removeItem(k);
+return true;
+}catch(e){return false}
+}
+const canStore = storageAvailable();
+function saveState(){
+if(!canStore) return;
+try{
+const data={
+bal, positions, tradeLog, seen, bought, skipped, rugs,
+knownRugs:[...knownRugs],
+savedAt:Date.now(),
+version:3
+};
+localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+localStorage.setItem('fomo_terminal_paper', JSON.stringify(data));
+}catch(e){}
+}
+function loadState(){
+if(!canStore) return false;
+try{
+let raw=localStorage.getItem(STORAGE_KEY);
+if(!raw) raw=localStorage.getItem('fomo_terminal_paper');
+if(!raw) return false;
+const data=JSON.parse(raw);
+if(typeof data.bal!=='number' || !isFinite(data.bal)) return false;
+bal=data.bal;
+positions=Array.isArray(data.positions)?data.positions:[];
+tradeLog=Array.isArray(data.tradeLog)?data.tradeLog:[];
+seen=data.seen||0; bought=data.bought||0; skipped=data.skipped||0; rugs=data.rugs||0;
+knownRugs=new Set(data.knownRugs||[]);
+coins = [];
+positions.forEach(p=>{
+coins.push({
+id:p.id, mint:p.mint||null, symbol:p.symbol, color:p.color||'#22c55e',
+curve:typeof p.curve==='number'?p.curve:50, speed:0.5, x:0.2+Math.random()*0.6,
+owned:true, age:p.age||0, dev:'restored', willRug:false, graduated:false,
+entryCurve: p.entryCurve != null ? p.entryCurve : (p.curve||50)
+});
+});
+return true;
+}catch(e){return false}
+}
+function log(msg,cls='info'){
+const line=document.createElement('div');line.className='log-line';
+line.innerHTML='<span class="cmd">grok&gt;</span> <span class="'+cls+'">'+msg+'</span>';
+const body=document.getElementById('logBody');body.prepend(line);
+while(body.children.length>50)body.removeChild(body.lastChild);
+}
+// Exact entry rules
+async function checkConcentration(coin){
+if(knownRugs.has(coin.dev)){
+return {ok:false, reason:'same wallet as old rug', level:'hard'};
+}
+let devHold = coin.devHold != null ? coin.devHold : (2 + Math.random() * 22);
+let bundleHold = coin.bundleHold != null ? coin.bundleHold : (Math.random() * 40);
+if(coin.initialBuySol != null){
+if(coin.initialBuySol > 4) devHold = Math.min(40, devHold + 10);
+else if(coin.initialBuySol > 2) devHold = Math.min(30, devHold + 5);
+else if(coin.initialBuySol < 0.25) devHold = Math.max(1, devHold - 4);
+}
+coin.devHold = devHold;
+coin.bundleHold = bundleHold;
+if(devHold > 10) return {ok:false, reason:'dev holds '+devHold.toFixed(0)+'%', level:'hard'};
+if(bundleHold > 25) return {ok:false, reason:'bundles hold '+bundleHold.toFixed(0)+'%', level:'hard'};
+return {ok:true, reason:'dev '+devHold.toFixed(0)+'% · bundle '+bundleHold.toFixed(0)+'%', level:'clean'};
+}
+async function evaluateCoin(c){
+const conc = await checkConcentration(c);
+if(!conc.ok) return {action:'skip', reason:conc.reason, cls:'rug'};
+const xPosts = c.xPosts ?? Math.floor(Math.random() * 40000);
+c.xPosts = xPosts;
+let score = 0;
+if(xPosts > 7000) score += 1.5;
+if(xPosts > 20000) score += 2;
+if(c.curve > 6 && c.curve < 45) score += 1;
+if(c.initialBuySol && c.initialBuySol > 1.2) score += 0.9;
+if(Math.random() < 0.30 + score * 0.12){
+const why = xPosts > 6000
+? (xPosts/1000).toFixed(0)+'K posts'
+: (c.initialBuySol ? 'init '+c.initialBuySol.toFixed(1)+' SOL' : 'curve entry');
+return {action:'buy', reason:why + ' · '+conc.reason, cls:'buy'};
+}
+return {action:'skip', reason:'weak signal', cls:'skip'};
+}
+function shortCA(ca){
+if(!ca || ca.startsWith('sim_')) return '';
+if(ca.length < 12) return ca;
+return ca.slice(0,4)+'…'+ca.slice(-4);
+}
+function copyCA(ca){
+if(!ca || ca.startsWith('sim_')){ log('no real CA for this coin','info'); return; }
+const done = ()=>{ log('copied CA · '+shortCA(ca),'ws'); showToast('CA copied'); };
+if(navigator.clipboard && navigator.clipboard.writeText){
+navigator.clipboard.writeText(ca).then(done).catch(()=>fallbackCopy(ca,done));
+} else fallbackCopy(ca,done);
+}
+function fallbackCopy(text, cb){
+const ta=document.createElement('textarea');
+ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px';
+document.body.appendChild(ta); ta.select();
+try{ document.execCommand('copy'); if(cb) cb(); }catch(e){ log('copy failed','info'); }
+document.body.removeChild(ta);
+}
+function showToast(msg){
+let t=document.getElementById('toast');
+if(!t){ t=document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); }
+t.textContent=msg; t.classList.add('show');
+clearTimeout(showToast._tm);
+showToast._tm=setTimeout(()=>t.classList.remove('show'),1600);
+}
+function recordTrade(type,symbol,sol,mult,note,entrySol,ca){
+const row={
+ts:new Date().toISOString(),
+type, symbol,
+sol:+sol.toFixed(4),
+mult:mult!=null?+mult.toFixed(3):'',
+note:note||'',
+entrySol: entrySol!=null ? +entrySol.toFixed(4) : null,
+ca: ca || ''
+};
+tradeLog.push(row);
+if(tradeLog.length>300) tradeLog=tradeLog.slice(-300);
+renderHistory();
+saveState();
+}
+function buy(c,reason){
+if(positions.length>=MAX_POSITIONS||bal<BUY_SIZE+.04){if(bal<BUY_SIZE+.04)log('insufficient SOL','skip');return}
+bal-=BUY_SIZE;
+positions.push({id:c.id,symbol:c.symbol,entrySol:BUY_SIZE,size:BUY_SIZE,curve:c.curve,age:0,color:c.color,entryCurve:c.curve,mint:c.mint||null});
+c.owned=true;bought++;
+recordTrade('BUY',c.symbol,BUY_SIZE,null,reason,BUY_SIZE,c.mint||c.id);
+log(c.symbol+' · '+reason+' → buy '+BUY_SIZE.toFixed(2)+' SOL','buy');
+if(c.mint){watchedMints.add(c.mint);subscribeTokenTrades(c.mint)}
+updateUI(); saveState();
+}
+function sell(pos,reason,forcedMult=null){
+let mult;if(forcedMult!=null)mult=forcedMult;
+else{const progress=Math.max(0,pos.curve-pos.entryCurve);mult=1+progress/36+(Math.random()-.3)*.5;mult=Math.max(.35,Math.min(5.5,mult))}
+const proceeds=pos.size*mult,pnl=proceeds-pos.size;bal+=proceeds;
+positions=positions.filter(p=>p.id!==pos.id);
+const coin=coins.find(x=>x.id===pos.id);if(coin)coin.owned=false;
+if(pos.mint)watchedMints.delete(pos.mint);
+recordTrade('SELL',pos.symbol,proceeds,mult,reason,pos.entrySol||pos.size,pos.mint||pos.id);
+log('sold '+pos.symbol+' '+((mult-1)*100).toFixed(0)+'% · '+(pnl>=0?'+':'')+pnl.toFixed(2)+' SOL','sell');
+updateUI(); saveState();
+}
+function forceSellAll(){[...positions].forEach(p=>sell(p,'force',.88+Math.random()*.2));log('force sold all','info')}
+function exportCSV(){
+if(!tradeLog.length){log('no trades to export','info');return}
+const header='timestamp,type,symbol,ca,sol,mult,entry_sol,note\n';
+const rows=tradeLog.map(t=>{
+const ca=(t.ca&&!String(t.ca).startsWith('sim_'))?t.ca:'';
+return t.ts+','+t.type+','+t.symbol+','+ca+','+t.sol+','+t.mult+','+(t.entrySol??'')+',"'+(t.note||'').replace(/"/g,'""')+'"';
+}).join('\n');
+const blob=new Blob([header+rows],{type:'text/csv'});
+const url=URL.createObjectURL(blob);const a=document.createElement('a');
+a.href=url;a.download='fomo-trades-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.csv';a.click();
+URL.revokeObjectURL(url);log('exported '+tradeLog.length+' trades','info');
+}
+function renderHistory(){
+const body=document.getElementById('histBody');
+const count=document.getElementById('histCount');
+count.textContent=tradeLog.length;
+if(!tradeLog.length){body.innerHTML='<div class="hist-empty">No trades yet</div>';return}
+const recent=[...tradeLog].reverse().slice(0,80);
+body.innerHTML=recent.map(t=>{
+const time=t.ts.slice(11,19);
+const isBuy=t.type==='BUY';
+let pnlTxt='—';
+let pnlCls='';
+if(!isBuy && t.mult!=='' && t.entrySol!=null){
+const pnl=(t.sol - t.entrySol);
+pnlTxt=(pnl>=0?'+':'')+pnl.toFixed(2);
+pnlCls=pnl>=0?'pos':'neg';
+} else if(isBuy){
+pnlTxt='-'+Number(t.sol).toFixed(2);
+pnlCls='neg';
+}
+const ca=t.ca||'';
+const caLabel=shortCA(ca)||'—';
+const caAttr=ca?ca.replace(/"/g,''):'';
+return '<div class="hist-row">'+
+'<span class="hist-time">'+time+'</span>'+
+'<span class="hist-sym" title="'+(caAttr||t.symbol)+'">'+t.symbol+
+(ca && !ca.startsWith('sim_') ? ' <span class="hist-ca" data-ca="'+caAttr+'" onclick="event.stopPropagation();copyCA(this.dataset.ca)">'+caLabel+'</span>' : '')+
+'</span>'+
+'<span class="hist-type '+(isBuy?'buy':'sell')+'">'+t.type+'</span>'+
+'<span class="hist-pnl '+pnlCls+'">'+pnlTxt+'</span>'+
+'</div>';
+}).join('');
+}
+async function handleNewLaunch(data,source){
+const mint=data.mint||null;
+const id=mint||('sim_'+Date.now()+Math.random().toString(36).slice(2,5));
+const symbol=data.symbol?('$'+(String(data.symbol).replace(/^\$/,''))):randName();
+const color=randColor(),curve=1+Math.random()*10;
+const initialBuySol=data.solAmount!=null?Number(data.solAmount):(data.initialQuoteAmount!=null?Number(data.initialQuoteAmount):null);
+const creator=data.traderPublicKey||data.creator||data.deployer||('dev_'+Math.floor(Math.random()*9000));
+const coin={id,mint,symbol,name:data.name||symbol,color,curve,speed:.3+Math.random()*1.5,x:.08+Math.random()*.84,owned:false,age:0,dev:creator,willRug:Math.random()<.15,graduated:false,initialBuySol,real:!!mint,source};
+coins.push(coin);seen++;if(mint)lastRealLaunch=Date.now();
+const decision=await evaluateCoin(coin);
+if(decision.action==='buy')buy(coin,decision.reason);
+else{skipped++;if(decision.cls==='rug'){rugs++;knownRugs.add(coin.dev);log('skip '+symbol+' · '+decision.reason,'rug')}
+else if(decision.reason.includes('%')||decision.reason.includes('hold')||decision.reason.includes('bundle'))log('skip '+symbol+' · '+decision.reason,'hold')}
+updateUI(); saveState();
+}
+function setStatus(live,label){
+feedLive=live;activeFeed=label||(live?'live':'sim');
+const pill=document.getElementById('statusPill'),txt=document.getElementById('statusText'),src=document.getElementById('feedSource');
+if(live){pill.className='status-pill live';txt.textContent='LIVE';src.textContent=label||'live feed'}
+else{pill.className='status-pill sim';txt.textContent='SIM';src.textContent='simulated'}
+}
+function onWsMessage(raw,source){
+try{
+const data=JSON.parse(raw);
+if(data.txType==='create'||(data.mint&&(data.name||data.symbol)&&!data.txType)){handleNewLaunch(data,source);return}
+if(data.signature&&data.mint){handleNewLaunch(data,source);return}
+if((data.txType==='buy'||data.txType==='sell')&&data.mint&&watchedMints.has(data.mint)){
+const coin=coins.find(c=>c.mint===data.mint);
+if(coin&&!coin.graduated){
+const delta=data.txType==='buy'?(0.8+Math.random()*2.2):-(1.2+Math.random()*3);
+coin.curve=Math.max(0,Math.min(99.5,coin.curve+delta));
+if(data.txType==='sell'&&Math.random()<.25&&coin.owned){const pos=positions.find(p=>p.id===coin.id);if(pos)sell(pos,'dev sells after entry',.45+Math.random()*.35)}
+}
+}
+}catch(e){}
+}
+function subscribeTokenTrades(mint){
+if(wsPrimary&&wsPrimary.readyState===1){try{wsPrimary.send(JSON.stringify({method:'subscribeTokenTrade',keys:[mint]}));log('watching '+mint.slice(0,6)+'…','ws')}catch(e){}}
+}
+function connectPrimary(){
+try{
+wsPrimary=new WebSocket(WS_PRIMARY);
+wsPrimary.onopen=()=>{setStatus(true,'pumpdev');log('pumpdev WS connected','ws');wsPrimary.send(JSON.stringify({method:'subscribeNewToken'}))};
+wsPrimary.onmessage=ev=>onWsMessage(ev.data,'pumpdev');
+wsPrimary.onclose=()=>{if(activeFeed==='pumpdev')setStatus(false);log('pumpdev closed · trying backup','info');setTimeout(connectBackup,1500);setTimeout(connectPrimary,12000)};
+wsPrimary.onerror=()=>{};
+}catch(e){connectBackup()}
+}
+function connectBackup(){
+try{
+wsBackup=new WebSocket(WS_BACKUP);
+wsBackup.onopen=()=>{if(!feedLive)setStatus(true,'PumpPortal');log('PumpPortal backup connected','ws');wsBackup.send(JSON.stringify({method:'subscribeNewToken'}))};
+wsBackup.onmessage=ev=>onWsMessage(ev.data,'portal');
+wsBackup.onclose=()=>{if(activeFeed==='PumpPortal')setStatus(false);setTimeout(connectBackup,15000)};
+wsBackup.onerror=()=>{};
+}catch(e){setStatus(false);log('no live feed · pure simulation','info')}
+}
+function spawnSim(){if(feedLive&&Date.now()-lastRealLaunch<14000)return;handleNewLaunch({},'sim')}
+function tick(){
+if(!running)return;
+if(!feedLive||Date.now()-lastRealLaunch>16000){if(Math.random()<.42)spawnSim()}
+coins.forEach(c=>{
+c.age++;if(c.graduated)return;
+let boost=c.speed*.3;if(c.owned)boost*=1.1;
+if(!watchedMints.has(c.mint))c.curve+=boost+(Math.random()-.4)*.8;
+c.curve=Math.min(100,c.curve);
+if(c.curve>=99&&!c.graduated){c.graduated=true;c.curve=100;if(c.owned){const pos=positions.find(p=>p.id===c.id);if(pos)sell(pos,'graduated → sell all',1.6+Math.random()*2.5)}}
+if(!c.graduated&&c.willRug&&c.age>10&&Math.random()<.03){c.curve=Math.max(0,c.curve-30);knownRugs.add(c.dev);if(c.owned){const pos=positions.find(p=>p.id===c.id);if(pos)sell(pos,'dev sells after entry',.3+Math.random()*.3)}}
+});
+positions.forEach(p=>{p.age++;const coin=coins.find(c=>c.id===p.id);if(coin)p.curve=coin.curve;if(Math.random()<.01)sell(p,'dev sells after entry')});
+if(coins.length>70)coins=coins.filter(c=>c.owned||c.age<55||c.curve>60);
+drawCurve();updateUI();
+}
+const canvas=document.getElementById('curveCanvas'),ctx=canvas.getContext('2d');
+// Tap a bubble / label on the curve to copy its CA
+canvas.addEventListener('click', function(ev){
+const rect=canvas.getBoundingClientRect();
+const x=(ev.clientX-rect.left);
+const y=(ev.clientY-rect.top);
+const w=canvas.clientWidth, h=canvas.clientHeight;
+let best=null, bestD=28;
+coins.forEach(c=>{
+const cx=c.x*w, cy=h*(0.92-(c.curve/100)*0.78);
+const d=Math.hypot(cx-x, cy-y);
+if(d<bestD){ bestD=d; best=c; }
+});
+if(best){
+const ca=best.mint||best.id;
+if(ca && !String(ca).startsWith('sim_')) copyCA(ca);
+else log(best.symbol+' · simulated (no on-chain CA)','info');
+}
+});
+function resizeCanvas(){const wrap=canvas.parentElement,dpr=window.devicePixelRatio||1;canvas.width=wrap.clientWidth*dpr;canvas.height=wrap.clientHeight*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+function drawCurve(){
+const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;ctx.clearRect(0,0,w,h);
+ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=1;
+for(let i=0;i<5;i++){const y=h*(.14+i*.17);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+ctx.beginPath();ctx.strokeStyle='rgba(251,191,36,.15)';ctx.lineWidth=2;ctx.moveTo(0,h*.92);ctx.quadraticCurveTo(w*.45,h*.55,w*.95,h*.12);ctx.stroke();
+coins.forEach(c=>{
+const x=c.x*w,y=h*(.92-(c.curve/100)*.78),r=c.owned?9.5:5+Math.min(4.5,c.curve/25);
+ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=c.owned?c.color:c.color+'99';ctx.fill();
+if(c.owned){ctx.strokeStyle='#fff';ctx.lineWidth=1.3;ctx.stroke()}
+if(c.owned||c.curve>50||c.graduated){
+ctx.font='9px JetBrains Mono';ctx.fillStyle=c.owned?'#fff':'rgba(255,255,255,.5)';ctx.textAlign='center';
+const label=c.symbol.length>9?c.symbol.slice(0,8)+'…':c.symbol;ctx.fillText(label,x,y-r-3);
+if(c.owned){const pos=positions.find(p=>p.id===c.id);if(pos){const mult=1+(c.curve-pos.entryCurve)/40;ctx.fillStyle=mult>=1?'#22c55e':'#ef4444';ctx.fillText((mult>=1?'+':'')+((mult-1)*100).toFixed(0)+'%',x,y+r+10)}}
+}
+});
+}
+function updateUI(){
+document.getElementById('balSol').textContent=bal.toFixed(2);
+document.getElementById('balUsd').textContent=Math.round(bal*SOL_PRICE).toLocaleString();
+const pnl=bal-START_BAL,pct=(pnl/START_BAL)*100,el=document.getElementById('pnlText');
+el.textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+' SOL ('+(pct>=0?'+':'')+pct.toFixed(0)+'%)';
+el.style.color=pnl>=0?'var(--green)':'var(--red)';
+document.getElementById('mult').textContent=(bal/START_BAL).toFixed(2)+'×';
+document.getElementById('statSeen').textContent=seen;document.getElementById('statBought').textContent=bought;
+document.getElementById('statSkipped').textContent=skipped;document.getElementById('statRugs').textContent=rugs;
+}
+function toggleBot(){running=!running;const btn=document.getElementById('btnStart');if(running){btn.textContent='● RUNNING';btn.classList.add('active');log('resumed','info')}else{btn.textContent='○ PAUSED';btn.classList.remove('active');log('paused','info')}}
+function resetSim(){
+if(!confirm('Reset paper balance to 5.00 SOL and clear history?')) return;
+bal=START_BAL;positions=[];coins=[];tradeLog=[];seen=bought=skipped=rugs=0;
+knownRugs.clear();watchedMints.clear();
+document.getElementById('logBody').innerHTML='';
+localStorage.removeItem(STORAGE_KEY); try{localStorage.removeItem('fomo_terminal_paper');}catch(e){}
+log('reset · 5.00 SOL paper','info');
+renderHistory();updateUI();drawCurve();
+}
+function toggleRules(){document.getElementById('rulesBox').classList.toggle('show')}
+function toggleHistory(){
+historyVisible=!historyVisible;
+document.getElementById('histPanel').classList.toggle('show',historyVisible);
+if(historyVisible) renderHistory();
+}
+window.addEventListener('resize',()=>{resizeCanvas();drawCurve()});
+resizeCanvas();
+// Restore previous session if present
+const restored=loadState();
+updateUI();
+renderHistory();
+if(restored){
+log('restored · '+bal.toFixed(2)+' SOL · '+tradeLog.length+' trades','info');
+log('paper balance saved on this device','info');
+} else {
+log('FOMO v3 online · paper mode (persistent)','info');
+if(!canStore) log('storage blocked · will reset on reload','rug');
+}
+log('connecting free feeds…','ws');
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+connectPrimary();setTimeout(connectBackup,2500);
+for(let i=0;i<3;i++)setTimeout(()=>spawnSim(),500+i*350);
+setInterval(tick,TICK_MS);setInterval(drawCurve,50);
+setInterval(saveState,8000);
+// iOS Safari / home-screen app: flush when backgrounded or closed
+document.addEventListener('visibilitychange', function(){
+if(document.visibilityState==='hidden') saveState();
+});
+window.addEventListener('pagehide', saveState);
+window.addEventListener('beforeunload', saveState);
+</script>
+</body>
+</html>
