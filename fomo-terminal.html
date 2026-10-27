@@ -49,7 +49,7 @@
     .bal-pnl{margin-top:8px;display:flex;justify-content:space-between;align-items:center}
     .pnl-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green)}
     .multiplier{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px;font-family:'JetBrains Mono',monospace}
-    .curve-panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;min-height:260px;position:relative}
+    .curve-panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;min-height:220px;position:relative}
     .curve-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
     .curve-title{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
     .curve-canvas-wrap{position:relative;flex:1;border-radius:10px;overflow:hidden;background:#080808;border:1px solid #151515}
@@ -61,17 +61,27 @@
     .stat-val{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;line-height:1.1}
     .stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}.stat-val.yellow{color:var(--yellow)}.stat-val.blue{color:var(--blue)}
     .stat-label{font-size:9px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.3px}
-    .log-panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;height:148px;display:flex;flex-direction:column}
-    .log-header{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-    .rules-toggle,.export-btn{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;background:none;border:none;font-family:'JetBrains Mono',monospace;padding:0}
+    .log-panel,.hist-panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column}
+    .log-panel{height:130px}
+    .hist-panel{max-height:160px;display:none}
+    .hist-panel.show{display:flex}
+    .panel-header{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+    .rules-toggle,.export-btn,.hist-toggle{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;background:none;border:none;font-family:'JetBrains Mono',monospace;padding:0}
     .rules-box{display:none;background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:9px;font-size:10px;font-family:'JetBrains Mono',monospace;line-height:1.5;color:#aaa;margin-bottom:5px}
     .rules-box.show{display:block}.rules-box strong{color:var(--text)}
-    .log-body{flex:1;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.45;scrollbar-width:thin;scrollbar-color:#333 transparent}
+    .log-body,.hist-body{flex:1;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.45;scrollbar-width:thin;scrollbar-color:#333 transparent}
     .log-line{margin-bottom:2px;opacity:0;animation:fadeIn .2s forwards}
     @keyframes fadeIn{to{opacity:1}}
     .log-line .cmd{color:var(--muted)}.log-line .buy{color:var(--green)}.log-line .sell{color:var(--accent)}
     .log-line .skip{color:var(--yellow)}.log-line .rug{color:var(--red)}.log-line .info{color:#94a3b8}
     .log-line .ws{color:#60a5fa}.log-line .hold{color:#c084fc}
+    .hist-row{display:grid;grid-template-columns:52px 1fr 54px 48px;gap:4px;padding:3px 0;border-bottom:1px solid #151515;align-items:center}
+    .hist-row:last-child{border-bottom:none}
+    .hist-time{color:var(--muted);font-size:9px}
+    .hist-sym{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .hist-type.buy{color:var(--green)}.hist-type.sell{color:var(--accent)}
+    .hist-pnl.pos{color:var(--green)}.hist-pnl.neg{color:var(--red)}
+    .hist-empty{color:var(--muted);text-align:center;padding:12px 0}
     .controls{display:flex;gap:6px}
     button.ctrl{flex:1;background:#111;border:1px solid #2a2a2a;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:11px 6px;border-radius:9px;cursor:pointer;transition:all .15s}
     button.ctrl:hover{background:#1a1a1a;border-color:#444}
@@ -85,13 +95,13 @@
   <div class="terminal">
     <div class="header">
       <div class="brand">
-        <h1>FOMO <span class="badge">paper · v2</span></h1>
-        <div class="sub">pump.fun · real launches + holder checks</div>
+        <h1>FOMO <span class="badge">paper · v3</span></h1>
+        <div class="sub">pump.fun · persistent paper + history</div>
       </div>
       <div id="statusPill" class="status-pill sim"><span class="dot"></span><span id="statusText">SIM</span></div>
     </div>
     <div class="balance-card">
-      <div class="bal-label">Balance (paper)</div>
+      <div class="bal-label">Balance (paper · saved)</div>
       <div class="bal-row">
         <div class="bal-sol"><span id="balSol">5.00</span> <span style="font-size:16px;color:var(--muted)">SOL</span></div>
         <div class="bal-usd">≈ $<span id="balUsd">945</span></div>
@@ -119,9 +129,11 @@
       <div class="stat"><div class="stat-val red" id="statRugs">0</div><div class="stat-label">rugs</div></div>
     </div>
     <div class="log-panel">
-      <div class="log-header">
+      <div class="panel-header">
         <span>grok bot · thinking</span>
         <span>
+          <button class="hist-toggle" onclick="toggleHistory()">history</button>
+          &nbsp;·&nbsp;
           <button class="export-btn" onclick="exportCSV()">export csv</button>
           &nbsp;·&nbsp;
           <span class="rules-toggle" onclick="toggleRules()">rules</span>
@@ -133,49 +145,85 @@
         <strong>3.</strong> Same wallet as a previous rug → skip forever<br>
         <strong>4.</strong> Dev sells after entry → sell all of that coin<br>
         <strong>5.</strong> Coin graduates → sell all<br>
-        <span style="color:#666;display:block;margin-top:4px">Paper only. Holder % best-effort from free sources.</span>
+        <span style="color:#666;display:block;margin-top:4px">Paper only. Balance &amp; history saved on this device.</span>
       </div>
       <div class="log-body" id="logBody"></div>
+    </div>
+    <div class="hist-panel" id="histPanel">
+      <div class="panel-header">
+        <span>trade history · <span id="histCount">0</span></span>
+        <button class="hist-toggle" onclick="toggleHistory()">hide</button>
+      </div>
+      <div class="hist-body" id="histBody"><div class="hist-empty">No trades yet</div></div>
     </div>
     <div class="controls">
       <button class="ctrl active" id="btnStart" onclick="toggleBot()">● RUNNING</button>
       <button class="ctrl" onclick="resetSim()">RESET</button>
       <button class="ctrl danger" onclick="forceSellAll()">FORCE SELL</button>
     </div>
-    <div class="note">pumpdev + PumpPortal free feeds · paper PnL · installable PWA</div>
+    <div class="note">pumpdev + PumpPortal · paper PnL persists on this device</div>
   </div>
   <script>
     const SOL_PRICE=189, START_BAL=5.0, BUY_SIZE=0.32, MAX_POSITIONS=4, TICK_MS=800;
     const WS_PRIMARY='wss://pumpdev.io/ws', WS_BACKUP='wss://pumpportal.fun/api/data';
+    const STORAGE_KEY='fomo_terminal_v3';
+
     let bal=START_BAL, positions=[], coins=[], tradeLog=[];
     let seen=0,bought=0,skipped=0,rugs=0, running=true;
     let knownRugs=new Set(), watchedMints=new Set();
     let wsPrimary=null, wsBackup=null, feedLive=false, lastRealLaunch=0, activeFeed='none';
+    let historyVisible=false;
+
     const prefixes=['GROK','PEPE','DOGE','MOON','FROG','AI','SEND','WAG','LAMBO','CHAD','BASED','RUG','FAKE','TURBO','HYPER','NEON','SOL','PUMP','FOMO','ALPHA','SIGMA','GIGA','MEGA','BONK','WIF'];
     const suffixes=['COIN','FUN','AI','X','INU','CAT','DOG','MOON','ROCKET','KING','BOT','MAX','PRO','V2','Z','69','420','SOL','PUMP'];
     function randName(){return '$'+prefixes[Math.floor(Math.random()*prefixes.length)]+suffixes[Math.floor(Math.random()*suffixes.length)]}
     function randColor(){const c=['#22c55e','#3b82f6','#a855f7','#f97316','#eab308','#ec4899','#06b6d4','#84cc16'];return c[Math.floor(Math.random()*c.length)]}
+
+    function saveState(){
+      try{
+        const data={
+          bal, positions, tradeLog, seen, bought, skipped, rugs,
+          knownRugs:[...knownRugs],
+          savedAt:Date.now()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }catch(e){}
+    }
+    function loadState(){
+      try{
+        const raw=localStorage.getItem(STORAGE_KEY);
+        if(!raw) return false;
+        const data=JSON.parse(raw);
+        if(typeof data.bal!=='number') return false;
+        bal=data.bal;
+        positions=Array.isArray(data.positions)?data.positions:[];
+        tradeLog=Array.isArray(data.tradeLog)?data.tradeLog:[];
+        seen=data.seen||0; bought=data.bought||0; skipped=data.skipped||0; rugs=data.rugs||0;
+        knownRugs=new Set(data.knownRugs||[]);
+        positions.forEach(p=>{
+          coins.push({
+            id:p.id, mint:p.mint||null, symbol:p.symbol, color:p.color||'#22c55e',
+            curve:p.curve||50, speed:0.5, x:0.2+Math.random()*0.6,
+            owned:true, age:p.age||0, dev:'restored', willRug:false, graduated:false
+          });
+        });
+        return true;
+      }catch(e){return false}
+    }
+
     function log(msg,cls='info'){
       const line=document.createElement('div');line.className='log-line';
       line.innerHTML='<span class="cmd">grok&gt;</span> <span class="'+cls+'">'+msg+'</span>';
       const body=document.getElementById('logBody');body.prepend(line);
       while(body.children.length>50)body.removeChild(body.lastChild);
     }
-    // Exact entry rules (user-defined):
-    // 1. Dev holds > 10% → skip
-    // 2. Bundles hold > 25% → skip
-    // 3. Same wallet as an old rug → skip forever
-    // 4. Dev sells after entry → sell all of that coin
-    // 5. Coin graduates → sell all
+
     async function checkConcentration(coin){
-      // Rule 3: known rug wallet → permanent skip
       if(knownRugs.has(coin.dev)){
         return {ok:false, reason:'same wallet as old rug', level:'hard'};
       }
-      // Assign / reuse holder estimates (best-effort free data)
       let devHold = coin.devHold != null ? coin.devHold : (2 + Math.random() * 22);
       let bundleHold = coin.bundleHold != null ? coin.bundleHold : (Math.random() * 40);
-      // Bias estimates from launch size when real holder data unavailable
       if(coin.initialBuySol != null){
         if(coin.initialBuySol > 4) devHold = Math.min(40, devHold + 10);
         else if(coin.initialBuySol > 2) devHold = Math.min(30, devHold + 5);
@@ -183,24 +231,13 @@
       }
       coin.devHold = devHold;
       coin.bundleHold = bundleHold;
-
-      // Rule 1: Dev > 10% → skip
-      if(devHold > 10){
-        return {ok:false, reason:'dev holds '+devHold.toFixed(0)+'%', level:'hard'};
-      }
-      // Rule 2: Bundles > 25% → skip
-      if(bundleHold > 25){
-        return {ok:false, reason:'bundles hold '+bundleHold.toFixed(0)+'%', level:'hard'};
-      }
+      if(devHold > 10) return {ok:false, reason:'dev holds '+devHold.toFixed(0)+'%', level:'hard'};
+      if(bundleHold > 25) return {ok:false, reason:'bundles hold '+bundleHold.toFixed(0)+'%', level:'hard'};
       return {ok:true, reason:'dev '+devHold.toFixed(0)+'% · bundle '+bundleHold.toFixed(0)+'%', level:'clean'};
     }
     async function evaluateCoin(c){
       const conc = await checkConcentration(c);
-      // Hard skips only (rules 1–3)
-      if(!conc.ok){
-        return {action:'skip', reason:conc.reason, cls:'rug'};
-      }
-      // Passed concentration → decide entry (still paper-style signal)
+      if(!conc.ok) return {action:'skip', reason:conc.reason, cls:'rug'};
       const xPosts = c.xPosts ?? Math.floor(Math.random() * 40000);
       c.xPosts = xPosts;
       let score = 0;
@@ -216,18 +253,31 @@
       }
       return {action:'skip', reason:'weak signal', cls:'skip'};
     }
-    function recordTrade(type,symbol,sol,mult,note){
-      tradeLog.push({ts:new Date().toISOString(),type,symbol,sol:+sol.toFixed(4),mult:mult!=null?+mult.toFixed(3):'',note:note||''});
+
+    function recordTrade(type,symbol,sol,mult,note,entrySol){
+      const row={
+        ts:new Date().toISOString(),
+        type, symbol,
+        sol:+sol.toFixed(4),
+        mult:mult!=null?+mult.toFixed(3):'',
+        note:note||'',
+        entrySol: entrySol!=null ? +entrySol.toFixed(4) : null
+      };
+      tradeLog.push(row);
+      if(tradeLog.length>300) tradeLog=tradeLog.slice(-300);
+      renderHistory();
+      saveState();
     }
+
     function buy(c,reason){
       if(positions.length>=MAX_POSITIONS||bal<BUY_SIZE+.04){if(bal<BUY_SIZE+.04)log('insufficient SOL','skip');return}
       bal-=BUY_SIZE;
       positions.push({id:c.id,symbol:c.symbol,entrySol:BUY_SIZE,size:BUY_SIZE,curve:c.curve,age:0,color:c.color,entryCurve:c.curve,mint:c.mint||null});
       c.owned=true;bought++;
-      recordTrade('BUY',c.symbol,BUY_SIZE,null,reason);
+      recordTrade('BUY',c.symbol,BUY_SIZE,null,reason,BUY_SIZE);
       log(c.symbol+' · '+reason+' → buy '+BUY_SIZE.toFixed(2)+' SOL','buy');
       if(c.mint){watchedMints.add(c.mint);subscribeTokenTrades(c.mint)}
-      updateUI();
+      updateUI(); saveState();
     }
     function sell(pos,reason,forcedMult=null){
       let mult;if(forcedMult!=null)mult=forcedMult;
@@ -236,20 +286,50 @@
       positions=positions.filter(p=>p.id!==pos.id);
       const coin=coins.find(x=>x.id===pos.id);if(coin)coin.owned=false;
       if(pos.mint)watchedMints.delete(pos.mint);
-      recordTrade('SELL',pos.symbol,proceeds,mult,reason);
+      recordTrade('SELL',pos.symbol,proceeds,mult,reason,pos.entrySol||pos.size);
       log('sold '+pos.symbol+' '+((mult-1)*100).toFixed(0)+'% · '+(pnl>=0?'+':'')+pnl.toFixed(2)+' SOL','sell');
-      updateUI();
+      updateUI(); saveState();
     }
     function forceSellAll(){[...positions].forEach(p=>sell(p,'force',.88+Math.random()*.2));log('force sold all','info')}
+
     function exportCSV(){
       if(!tradeLog.length){log('no trades to export','info');return}
-      const header='timestamp,type,symbol,sol,mult,note\n';
-      const rows=tradeLog.map(t=>t.ts+','+t.type+','+t.symbol+','+t.sol+','+t.mult+',"'+(t.note||'').replace(/"/g,'""')+'"').join('\n');
+      const header='timestamp,type,symbol,sol,mult,entry_sol,note\n';
+      const rows=tradeLog.map(t=>t.ts+','+t.type+','+t.symbol+','+t.sol+','+t.mult+','+(t.entrySol??'')+',"'+(t.note||'').replace(/"/g,'""')+'"').join('\n');
       const blob=new Blob([header+rows],{type:'text/csv'});
       const url=URL.createObjectURL(blob);const a=document.createElement('a');
       a.href=url;a.download='fomo-trades-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.csv';a.click();
       URL.revokeObjectURL(url);log('exported '+tradeLog.length+' trades','info');
     }
+
+    function renderHistory(){
+      const body=document.getElementById('histBody');
+      const count=document.getElementById('histCount');
+      count.textContent=tradeLog.length;
+      if(!tradeLog.length){body.innerHTML='<div class="hist-empty">No trades yet</div>';return}
+      const recent=[...tradeLog].reverse().slice(0,80);
+      body.innerHTML=recent.map(t=>{
+        const time=t.ts.slice(11,19);
+        const isBuy=t.type==='BUY';
+        let pnlTxt='—';
+        let pnlCls='';
+        if(!isBuy && t.mult!=='' && t.entrySol!=null){
+          const pnl=(t.sol - t.entrySol);
+          pnlTxt=(pnl>=0?'+':'')+pnl.toFixed(2);
+          pnlCls=pnl>=0?'pos':'neg';
+        } else if(isBuy){
+          pnlTxt='-'+Number(t.sol).toFixed(2);
+          pnlCls='neg';
+        }
+        return '<div class="hist-row">'+
+          '<span class="hist-time">'+time+'</span>'+
+          '<span class="hist-sym">'+t.symbol+'</span>'+
+          '<span class="hist-type '+(isBuy?'buy':'sell')+'">'+t.type+'</span>'+
+          '<span class="hist-pnl '+pnlCls+'">'+pnlTxt+'</span>'+
+          '</div>';
+      }).join('');
+    }
+
     async function handleNewLaunch(data,source){
       const mint=data.mint||null;
       const id=mint||('sim_'+Date.now()+Math.random().toString(36).slice(2,5));
@@ -263,8 +343,9 @@
       if(decision.action==='buy')buy(coin,decision.reason);
       else{skipped++;if(decision.cls==='rug'){rugs++;knownRugs.add(coin.dev);log('skip '+symbol+' · '+decision.reason,'rug')}
         else if(decision.reason.includes('%')||decision.reason.includes('hold')||decision.reason.includes('bundle'))log('skip '+symbol+' · '+decision.reason,'hold')}
-      updateUI();
+      updateUI(); saveState();
     }
+
     function setStatus(live,label){
       feedLive=live;activeFeed=label||(live?'live':'sim');
       const pill=document.getElementById('statusPill'),txt=document.getElementById('statusText'),src=document.getElementById('feedSource');
@@ -352,14 +433,41 @@
       document.getElementById('statSkipped').textContent=skipped;document.getElementById('statRugs').textContent=rugs;
     }
     function toggleBot(){running=!running;const btn=document.getElementById('btnStart');if(running){btn.textContent='● RUNNING';btn.classList.add('active');log('resumed','info')}else{btn.textContent='○ PAUSED';btn.classList.remove('active');log('paused','info')}}
-    function resetSim(){bal=START_BAL;positions=[];coins=[];tradeLog=[];seen=bought=skipped=rugs=0;knownRugs.clear();watchedMints.clear();document.getElementById('logBody').innerHTML='';log('reset · 5.00 SOL paper','info');updateUI();drawCurve()}
+    function resetSim(){
+      if(!confirm('Reset paper balance to 5.00 SOL and clear history?')) return;
+      bal=START_BAL;positions=[];coins=[];tradeLog=[];seen=bought=skipped=rugs=0;
+      knownRugs.clear();watchedMints.clear();
+      document.getElementById('logBody').innerHTML='';
+      localStorage.removeItem(STORAGE_KEY);
+      log('reset · 5.00 SOL paper','info');
+      renderHistory();updateUI();drawCurve();
+    }
     function toggleRules(){document.getElementById('rulesBox').classList.toggle('show')}
+    function toggleHistory(){
+      historyVisible=!historyVisible;
+      document.getElementById('histPanel').classList.toggle('show',historyVisible);
+      if(historyVisible) renderHistory();
+    }
+
     window.addEventListener('resize',()=>{resizeCanvas();drawCurve()});
-    resizeCanvas();updateUI();log('FOMO v2 online · paper mode','info');log('connecting free feeds…','ws');
+    resizeCanvas();
+
+    const restored=loadState();
+    updateUI();
+    renderHistory();
+    if(restored){
+      log('restored paper session · '+bal.toFixed(2)+' SOL','info');
+      log(tradeLog.length+' past trades loaded','info');
+    } else {
+      log('FOMO v3 online · paper mode (persistent)','info');
+    }
+    log('connecting free feeds…','ws');
+
     if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
     connectPrimary();setTimeout(connectBackup,2500);
-    for(let i=0;i<4;i++)setTimeout(()=>spawnSim(),400+i*320);
+    for(let i=0;i<3;i++)setTimeout(()=>spawnSim(),500+i*350);
     setInterval(tick,TICK_MS);setInterval(drawCurve,50);
+    setInterval(saveState,15000);
   </script>
 </body>
 </html>
