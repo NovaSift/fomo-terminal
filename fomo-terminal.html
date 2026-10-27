@@ -5,31 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <meta name="theme-color" content="#fbbf24"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <link rel="manifest" href="./manifest.json"/>
-<title>FOMO — pump.fun Terminal</title>
+<title>FOMO Terminal</title>
 </head>
-<body style="margin:0;background:#050505;color:#666;font-family:system-ui,monospace;display:flex;align-items:center;justify-content:center;min-height:100dvh">
-<div id="boot">Loading FOMO…</div>
-<script src="./fomo-part0.js"></script>
-<script src="./fomo-part1.js"></script>
-<script src="./fomo-part2.js"></script>
+<body style="margin:0;background:#050505;color:#888;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100dvh">
+<div id="b">Loading FOMO…</div>
+<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+<script src="./fomo-payload.js"></script>
 <script>
-(function(){
-  try {
-    var parts = window.__FOMO_PARTS || [];
-    if (parts.length < 3 || !parts[0]) {
-      document.getElementById('boot').textContent = 'Load error — missing parts';
-      return;
-    }
-    var html = parts.join('');
-    document.open();
-    document.write(html);
-    document.close();
-  } catch (e) {
-    document.getElementById('boot').textContent = 'Error: ' + e.message;
-  }
-})();
+try {
+  const bin = Uint8Array.from(atob(window.FOMO_B64), c => c.charCodeAt(0));
+  const html = pako.ungzip(bin, { to: 'string' });
+  document.open(); document.write(html); document.close();
+} catch (e) {
+  document.getElementById('b').textContent = 'Load error: ' + e.message;
+}
 </script>
 </body>
 </html>
