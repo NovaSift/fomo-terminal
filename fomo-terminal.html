@@ -138,7 +138,7 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-ser
 <div id="toast" class="toast"></div>
 
 <script>
-const SP=189, SB=5, BS=0.32, MP=4, SK='fomo_live_paper_v2';
+const SP=189, SB=5, BS=0.32, MP=4, SK='fomo_live_paper_v3';
 const WP='wss://pumpdev.io/ws', WB='wss://pumpportal.fun/api/data';
 
 let bal=SB, positions=[], coins=[], tradeLog=[];
@@ -312,14 +312,14 @@ function onLaunch(data, source){
   if(coins.some(c=>c.mint===mint)) return;
 
   const symbol = data.symbol ? ('$'+String(data.symbol).replace(/^\$/,'')) : ('$'+mint.slice(0,6));
-  const creator = data.traderPublicKey || data.creator || data.deployer || ('dev_'+mint.slice(0,6));
+  const creator = data.traderPublicKey || data.creator || data.deployer || data.user || data.owner || ('dev_'+mint.slice(0,6));
   const initSol = data.solAmount!=null ? Number(data.solAmount) : (data.initialQuoteAmount!=null ? Number(data.initialQuoteAmount) : null);
 
   const coin = {
     id: mint, mint, symbol, color: randColor(),
     curve: 2+Math.random()*8, x: 0.08+Math.random()*0.84,
-    owned:false, age:0, dev:creator, real:true, source,
-    initSol, lastPx:1, graduated:false
+    owned:false, age:0, dev:creator, creator:creator, deployer:creator,
+    real:true, source, initSol, lastPx:1, graduated:false
   };
   coins.push(coin); seen++;
 
@@ -346,45 +346,74 @@ function onLaunch(data, source){
   ui(); save();
 }
 
+function walletOf(data){
+  // Free feeds use different keys — check all common ones
+  return data.traderPublicKey || data.user || data.owner || data.seller ||
+         data.buyer || data.wallet || data.maker || data.signer ||
+         data.trader || data.account || null;
+}
+function normWallet(w){
+  return (w||'').toString().trim().toLowerCase();
+}
+function isDevWallet(w, coin){
+  if(!w || !coin) return false;
+  const a = normWallet(w);
+  const candidates = [coin.dev, coin.creator, coin.deployer].map(normWallet).filter(Boolean);
+  return candidates.some(c => c && (c===a || (c.length>20 && a.length>20 && (c.includes(a.slice(0,8)) || a.includes(c.slice(0,8))))));
+}
 function applyTrade(data){
-  const mint=data.mint; if(!mint||!watched.has(mint)) return;
-  const coin=coins.find(c=>c.mint===mint); if(!coin||coin.graduated) return;
-  const pos=positions.find(p=>p.mint===mint);
+  const mint = data.mint || data.tokenMint || data.bondingCurveKey;
+  if(!mint || !watched.has(mint)) return;
+  const coin = coins.find(c => c.mint===mint); if(!coin || coin.graduated) return;
+  let pos = positions.find(p => p.mint===mint);
 
-  const isBuy = data.txType==='buy' || data.isBuy===true;
-  const isSell = data.txType==='sell' || data.isBuy===false;
+  const tx = (data.txType || data.type || data.side || '').toString().toLowerCase();
+  const isBuy = tx==='buy' || data.isBuy===true || data.side==='buy';
+  const isSell = tx==='sell' || data.isBuy===false || data.side==='sell';
+  const trader = walletOf(data);
+  const solAmt = Number(data.solAmount || data.sol || data.quoteAmount || 0) || 0;
 
   // Move curve + paper mark from real flow direction
   if(isBuy){
-    coin.curve = Math.min(99.5, coin.curve + (0.6 + Math.random()*2.0));
+    coin.curve = Math.min(99.5, coin.curve + (0.6 + Math.random()*2.0 + Math.min(3, solAmt)));
     coin.lastPx = (coin.lastPx||1) * (1 + 0.01 + Math.random()*0.04);
   } else if(isSell){
-    coin.curve = Math.max(0, coin.curve - (0.8 + Math.random()*2.5));
+    coin.curve = Math.max(0, coin.curve - (0.8 + Math.random()*2.5 + Math.min(4, solAmt)));
     coin.lastPx = (coin.lastPx||1) * (1 - 0.015 - Math.random()*0.05);
   }
 
   if(pos){
     pos.curve = coin.curve;
     pos.lastPx = coin.lastPx;
-    // Dev-sell heuristic: large sell after our entry
-    if(isSell && data.traderPublicKey && data.traderPublicKey===coin.dev){
-      sell(pos, 'dev sells after entry', Math.max(0.25, (pos.lastPx||1)/(pos.entryPx||1)));
-      knownRugs.add(coin.dev); rugs++;
+
+    // Rule 4: dev sells after entry → sell all
+    // Match on any known wallet field; also treat large sells from creator-like wallets
+    if(isSell && isDevWallet(trader, coin)){
+      log(pos.symbol+' · DEV SELL detected · '+shortCA(trader||''),'rug');
+      sell(pos, 'dev sells after entry', Math.max(0.2, (pos.lastPx||1)/(pos.entryPx||1)));
+      if(coin.dev) knownRugs.add(coin.dev);
+      rugs++;
+      pos = null;
     }
   }
 
   if(coin.curve>=99 && !coin.graduated){
     coin.graduated=true; coin.curve=100;
+    pos = positions.find(p => p.mint===mint);
     if(pos) sell(pos, 'graduated → sell all', Math.max(1.2, (pos.lastPx||1)/(pos.entryPx||1)));
   }
 }
 
 function onMsg(raw){
   try{
-    const d=JSON.parse(raw);
-    if(d.txType==='create' || (d.mint && (d.name||d.symbol) && !d.txType)){ onLaunch(d); return; }
-    if(d.signature && d.mint && (d.name||d.symbol)){ onLaunch(d); return; }
-    if((d.txType==='buy'||d.txType==='sell') && d.mint) applyTrade(d);
+    const d = typeof raw==='string' ? JSON.parse(raw) : raw;
+    const msg = d.data || d.payload || d;
+    if(Array.isArray(msg)){ msg.forEach(x=>{ try{ onMsg(JSON.stringify(x)); }catch(e){} }); return; }
+    const tx = (msg.txType || msg.type || msg.side || '').toString().toLowerCase();
+    if(tx==='create' || msg.txType==='create'){ onLaunch(msg); return; }
+    if(msg.mint && (msg.name||msg.symbol) && !tx){ onLaunch(msg); return; }
+    if(msg.signature && msg.mint && (msg.name||msg.symbol) && tx!=='buy' && tx!=='sell'){ onLaunch(msg); return; }
+    if((tx==='buy'||tx==='sell') && (msg.mint||msg.tokenMint)) applyTrade(msg);
   }catch(e){}
 }
 
@@ -396,12 +425,17 @@ function setLive(on, label){
 }
 
 function subTrades(mint){
-  if(wsP && wsP.readyState===1){
-    try{ wsP.send(JSON.stringify({method:'subscribeTokenTrade', keys:[mint]})); log('watching '+shortCA(mint),'ws'); }catch(e){}
-  }
-  if(wsB && wsB.readyState===1){
-    try{ wsB.send(JSON.stringify({method:'subscribeTokenTrade', keys:[mint]})); }catch(e){}
-  }
+  if(!mint) return;
+  const payloads = [
+    {method:'subscribeTokenTrade', keys:[mint]},
+    {method:'subscribeTokenTrade', keys:[mint], tokens:[mint]},
+    {action:'subscribe', mint:mint}
+  ];
+  [wsP, wsB].forEach(ws => {
+    if(!ws || ws.readyState!==1) return;
+    payloads.forEach(p => { try{ ws.send(JSON.stringify(p)); }catch(e){} });
+  });
+  log('watching trades · '+shortCA(mint),'ws');
 }
 
 function connP(){
