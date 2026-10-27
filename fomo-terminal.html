@@ -1,26 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#fbbf24"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<link rel="manifest" href="./manifest.json"/>
-<title>FOMO Terminal</title>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="theme-color" content="#fbbf24"/><meta name="apple-mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="./manifest.json"/><title>FOMO Live Paper</title>
 </head>
 <body style="margin:0;background:#050505;color:#888;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100dvh">
-<div id="b">Loading FOMO…</div>
+<div id="b">Loading FOMO live-paper…</div>
 <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-<script src="./fomo-payload-a.js"></script>
-<script src="./fomo-payload-b.js"></script>
+<script src="./fomo-p0.js"></script>
+<script src="./fomo-p1.js"></script>
+<script src="./fomo-p2.js"></script>
 <script>
-try {
-  const bin = Uint8Array.from(atob(window.FOMO_B64), c => c.charCodeAt(0));
-  const html = pako.ungzip(bin, { to: 'string' });
-  document.open(); document.write(html); document.close();
-} catch (e) {
-  document.getElementById('b').textContent = 'Load error: ' + e.message;
-}
+try{
+  const b64=(window.__P||[]).join('');
+  const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  document.open();document.write(pako.ungzip(bin,{to:'string'}));document.close();
+}catch(e){document.getElementById('b').textContent='Load error: '+e.message}
 </script>
-</body>
-</html>
+</body></html>
